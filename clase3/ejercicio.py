@@ -38,6 +38,7 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import * 
 from PyQt5.QtGui import *
+from PyQt5.QtMultimedia import *
 
 class VentanaHerramientas(QWidget):
     def __init__(self, ventana_formulario):
@@ -47,6 +48,15 @@ class VentanaHerramientas(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
         
+        
+        self.label = QLabel(self)
+        self.label.setGeometry(0, 0, self.width(), self.height())
+
+        self.blur = QGraphicsBlurEffect()
+        self.blur.setBlurRadius(5)  # Ajustá el valor (más alto = más difuso)
+        self.label.setGraphicsEffect(self.blur)
+        # Mostrar la imagen inicial
+        self.actualizar_fondo()
         
         # -----------------------------------------------------------------------------
         # Ejercicio 2: Crear la ventana de herramientas
@@ -64,10 +74,10 @@ class VentanaHerramientas(QWidget):
         self.buscar = QPushButton("Buscar")
         self.salir = QPushButton("Salir")
 
-        self.guardar.setStyleSheet("font-weight: bold; background-color: lightgrey; border: 2px solid black; border-radius: 8px; padding: 7px 15px;")
-        self.abrir.setStyleSheet("font-weight: bold; background-color: lightgrey; border: 2px solid black; border-radius: 8px; padding: 7px 15px;")
-        self.buscar.setStyleSheet("font-weight: bold; background-color: lightgrey; border: 2px solid black; border-radius: 8px; padding: 7px 15px;")
-        self.salir.setStyleSheet("font-weight: bold; background-color: lightgrey; border: 2px solid black; border-radius: 8px; padding: 7px 15px;")
+        self.guardar.setStyleSheet("color: darkred;font-weight: bold; background-color: white; border: 2px solid black; border-radius: 8px; padding: 7px 15px;")
+        self.abrir.setStyleSheet("color: darkred;font-weight: bold; background-color: white; border: 2px solid black; border-radius: 8px; padding: 7px 15px;")
+        self.buscar.setStyleSheet("color: darkred;font-weight: bold; background-color: white; border: 2px solid black; border-radius: 8px; padding: 7px 15px;")
+        self.salir.setStyleSheet("color: darkred;font-weight: bold; background-color: white; border: 2px solid black; border-radius: 8px; padding: 7px 15px;")
 
 
         layout.addWidget(self.guardar)
@@ -118,6 +128,20 @@ class VentanaHerramientas(QWidget):
         self.ventana_formulario.close()
         self.close()
 
+
+    def actualizar_fondo(self):
+        # Cargar imagen original y pasarla a gris
+        imagen = QImage("C:/Users/54346/Desktop/fondo.png").convertToFormat(QImage.Format_Grayscale8)
+        pixmap = QPixmap.fromImage(imagen)
+
+        # Escalar al tamaño actual de la ventana
+        self.label.setPixmap(pixmap.scaled(self.size()))
+
+    def resizeEvent(self, event):
+        # Cada vez que se redimensiona, se vuelve a escalar
+        self.label.setGeometry(0, 0, self.width(), self.height())
+        self.actualizar_fondo()
+
 class VentanaFormulario(QWidget):
     def __init__(self):
         super().__init__()
@@ -160,7 +184,7 @@ class VentanaFormulario(QWidget):
         self.fecha.setDate(QDate.currentDate())
 
         self.foto = QLabel(self)
-        self.escudo = QPixmap("C:/Users/usuario-pc23/Desktop/escudo.png")
+        self.escudo = QPixmap("C:/Users/54346/Desktop/escudo.png")
         self.escudo = self.escudo.scaled(150, 150, Qt.KeepAspectRatio)
         self.foto.setPixmap(self.escudo)
         self.foto.setAlignment(Qt.AlignCenter)  
@@ -181,9 +205,34 @@ class VentanaFormulario(QWidget):
         self.abrir_herramientas.clicked.connect(self.abrir_herramientas_func)
 
         self.abrir_herramientas.setStyleSheet("font-weight: bold; background-color: lightgrey; border: 2px solid black; border-radius: 8px; padding: 7px 15px;")
-        layout.addWidget(self.abrir_herramientas, 7, 0, 1, 2)
+        layout.addWidget(self.abrir_herramientas, 8, 0, 1, 2)
 
         self.ventana_herramientas = None
+
+        btn_play = QPushButton("▶ Reproducir Hinchada")
+        btn_play.clicked.connect(self.reproducir_cancion)
+        layout.addWidget(btn_play, 6, 0)
+
+        # Botón Pausar/Continuar
+        btn_pause = QPushButton("⏸ Pausar/Continuar")
+        btn_pause.clicked.connect(self.pausar_cancion)
+        layout.addWidget(btn_pause, 6, 1)
+
+
+        self.player = QMediaPlayer()
+        url = QUrl.fromLocalFile("C:/Users/54346/Desktop/cancion.mp3")  # Cambia por tu canción
+        self.player.setMedia(QMediaContent(url))
+
+    def reproducir_cancion(self):
+        self.player.play()
+
+    def pausar_cancion(self):
+        if self.player.state() == QMediaPlayer.PlayingState:
+            self.player.pause()
+        elif self.player.state() == QMediaPlayer.PausedState:
+            self.player.play()
+
+
 
     def abrir_herramientas_func(self):
         if self.ventana_herramientas is None:
