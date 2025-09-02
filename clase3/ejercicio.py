@@ -131,7 +131,7 @@ class VentanaHerramientas(QWidget):
 
     def actualizar_fondo(self):
         # Cargar imagen original y pasarla a gris
-        imagen = QImage("C:/Users/54346/Desktop/fondo.png").convertToFormat(QImage.Format_Grayscale8)
+        imagen = QImage("fondo.png").convertToFormat(QImage.Format_Grayscale8)
         pixmap = QPixmap.fromImage(imagen)
 
         # Escalar al tamaño actual de la ventana
@@ -184,7 +184,7 @@ class VentanaFormulario(QWidget):
         self.fecha.setDate(QDate.currentDate())
 
         self.foto = QLabel(self)
-        self.escudo = QPixmap("C:/Users/54346/Desktop/escudo.png")
+        self.escudo = QPixmap("escudo.png")
         self.escudo = self.escudo.scaled(150, 150, Qt.KeepAspectRatio)
         self.foto.setPixmap(self.escudo)
         self.foto.setAlignment(Qt.AlignCenter)  
@@ -220,7 +220,7 @@ class VentanaFormulario(QWidget):
 
 
         self.player = QMediaPlayer()
-        url = QUrl.fromLocalFile("C:/Users/54346/Desktop/cancion.mp3")  # Cambia por tu canción
+        url = QUrl.fromLocalFile("cancion.mp3")  
         self.player.setMedia(QMediaContent(url))
 
     def reproducir_cancion(self):
