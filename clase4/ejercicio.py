@@ -23,14 +23,16 @@ import sys
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTextEdit, QMenuBar, 
                              QAction, QFileDialog, QMessageBox, QStatusBar,
                              QVBoxLayout, QWidget)
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QKeySequence
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 
 class EditorTexto(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Editor de Texto")
+        self.setWindowTitle("Editor de Texto Open Source")
         self.setGeometry(100, 100, 800, 600)
+
+        self.setWindowIcon(QIcon('kali.png'))
         
         # COMPLETAR: Crear QTextEdit y establecerlo como widget central
         # self.editor = QTextEdit()
@@ -60,6 +62,8 @@ class EditorTexto(QMainWindow):
         # COMPLETAR: Obtener la barra de menús
         # menubar = self.menuBar()
         bar = self.menuBar()
+
+
         # COMPLETAR: Crear menú Archivo
         # menu_archivo = menubar.addMenu('&Archivo')
         archive = bar.addMenu('&Archivo')
@@ -88,6 +92,12 @@ class EditorTexto(QMainWindow):
         close.setShortcut("Ctrl+Q")
         close.triggered.connect(self.salir)
         archive.addAction(close)
+
+        about = bar.addMenu('&Ayuda')
+        help1 = QAction('&Acerca de', self)
+        help1.setShortcut("Ctrl+H")
+        help1.triggered.connect(self.acerca_de)
+        about.addAction(help1)
         
 
 # -----------------------------------------------------------------------------
@@ -104,9 +114,28 @@ class EditorTexto(QMainWindow):
 # - Implementar guardar_archivo(): usar QFileDialog para guardar texto.
 
     def nuevo_archivo(self):
-        self.hoja.clear()
-        self.statusBar().showMessage('Archivo nuevo.')
-        
+
+
+        if self.hoja.document().isModified():
+            msg_box = QMessageBox()
+            msg_box.setWindowTitle('Nuevo Archivo')
+            msg_box.setText('¿Desea guardar los cambios?')
+            si_button = msg_box.addButton("Sí", QMessageBox.YesRole)
+            no_button = msg_box.addButton("No", QMessageBox.NoRole)
+            cancel_button = msg_box.addButton("Cancelar", QMessageBox.RejectRole)
+
+            msg_box.exec_()
+            respond = msg_box.clickedButton()
+
+            if respond == si_button:
+                self.guardar_archivo()
+                self.hoja.clear()
+                self.statusBar().showMessage('Documento guardado. El nuevo archivo esta disponible.')
+            elif respond == no_button:
+                self.hoja.clear()
+                self.statusBar().showMessage('Cambios descartados. Archivo nuevo.')
+            elif respond == cancel_button:
+                pass
     
     def abrir_archivo(self):
         # COMPLETAR: Abrir diálogo de archivo y cargar contenido
@@ -133,7 +162,7 @@ class EditorTexto(QMainWindow):
         if archivo:
             try:
                 with open(archivo, 'w', encoding='utf-8') as f:
-                    f.write(self.editor.toPlainText())
+                    f.write(self.hoja.toPlainText())
                     self.statusBar().showMessage(f'Archivo guardado en "{archivo}".')
             except Exception as e:
                 QMessageBox.warning(self, 'Error', f'No se pudo guardar el archivo:\n{e}')
@@ -155,7 +184,8 @@ class EditorTexto(QMainWindow):
         # COMPLETAR: Mostrar información del programa
         # QMessageBox.information(self, 'Acerca de', 
         #                        'Editor de Texto v1.0\n\nCreado con PyQt5\nPara aprender desarrollo de interfaces.')
-        pass
+         QMessageBox.information(self, 'Acerca de', 
+                                'Nombre: Editor de texto Open Source\nVersion: v1.0\nCreado por: Lanthier Agustin, Marcos Ledesma\nSolo para Linux, porque es cool 🥵')
     
     def salir(self):
         # COMPLETAR: Preguntar si desea guardar antes de salir
@@ -166,7 +196,23 @@ class EditorTexto(QMainWindow):
         #     self.guardar_archivo()
         # elif respuesta == QMessageBox.No:
         #     self.close()
-        pass
+        msg_box = QMessageBox()
+        msg_box.setWindowTitle('Salir')
+        msg_box.setText('¿Desea guardar los cambios?')
+        si_button = msg_box.addButton("Sí", QMessageBox.YesRole)
+        no_button = msg_box.addButton("No", QMessageBox.NoRole)
+        cancel_button = msg_box.addButton("Cancelar", QMessageBox.RejectRole)
+        
+        msg_box.exec_()
+        respond = msg_box.clickedButton()
+
+        if respond == si_button:
+            self.guardar_archivo()
+            self.close()
+        elif respond == no_button:
+            self.close()
+        elif respond == cancel_button:
+            pass
 
 # -----------------------------------------------------------------------------
 # Ejercicio 5: Agregar barra de estado
@@ -210,4 +256,3 @@ if __name__ == '__main__':
 # - Añadir formato de texto (negrita, cursiva).
 # - Crear diálogo de configuración de fuente.
 # - Implementar funcionalidad de "Archivos recientes".
-
