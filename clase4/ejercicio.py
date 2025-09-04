@@ -1,267 +1,323 @@
-# Práctico PyQt5: Editor de Texto con Menús y Diálogos
-# ------------------------------------------------
-#
-# Objetivo: Crear un editor de texto completo integrando todos los conceptos aprendidos:
-# menús, diálogos, gestión de archivos, barras de estado y shortcuts de teclado.
-#
-# Este ejercicio te guiará para construir una aplicación profesional paso a paso.
-#
-# -----------------------------------------------------------------------------
-# Ejercicio 1: Ventana principal con área de texto
-# -----------------------------------------------------------------------------
-# Teoría:
-# - QMainWindow es la base para aplicaciones con menús y barras de herramientas.
-# - QTextEdit permite editar texto con formato básico.
-# - setCentralWidget() define el widget principal de la ventana.
-#
-# Consigna:
-# - Crear ventana principal (QMainWindow) de 800x600, título "Editor de Texto".
-# - Agregar QTextEdit como widget central.
-# - Configurar texto inicial: "Escribe aquí tu texto..."
+# trabajo realizado por Marcos Ledesma y Agustin Lanthier
+# Version de Agustin Lanthier
 
 import sys
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTextEdit, QMenuBar, 
                              QAction, QFileDialog, QMessageBox, QStatusBar,
-                             QVBoxLayout, QWidget)
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+                             QVBoxLayout, QWidget, QDialog, QLineEdit, QLabel, QPushButton, 
+                             QGridLayout, QFontDialog)
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QKeySequence, QFont
+from PyQt5.QtPrintSupport import QPrintPreviewDialog, QPrinter
+from theme import * 
 
+# -------------------------------------------------------------------
+# Extra: Buscar y Reemplazar
+# -------------------------------------------------------------------
+class BuscarReemplazarDialog(QDialog):
+    def __init__(self, editor):
+        super().__init__()
+        self.setWindowTitle("Buscar y Reemplazar")
+        self.editor = editor
+        
+        layout = QGridLayout()
+
+        self.buscar_input = QLineEdit()
+        self.reemplazar_input = QLineEdit()
+
+        layout.addWidget(QLabel("Buscar:"), 0, 0)
+        layout.addWidget(self.buscar_input, 0, 1)
+
+        layout.addWidget(QLabel("Reemplazar con:"), 1, 0)
+        layout.addWidget(self.reemplazar_input, 1, 1)
+
+        btn_buscar = QPushButton("Buscar")
+        btn_buscar.clicked.connect(self.buscar_texto)
+        layout.addWidget(btn_buscar, 2, 0)
+
+        btn_reemplazar = QPushButton("Reemplazar")
+        btn_reemplazar.clicked.connect(self.reemplazar_texto)
+        layout.addWidget(btn_reemplazar, 2, 1)
+
+        self.setLayout(layout)
+
+    def buscar_texto(self):
+        texto = self.buscar_input.text()
+        if texto:
+            cursor = self.editor.document().find(texto)
+            if not cursor.isNull():
+                self.editor.setTextCursor(cursor)
+
+    def reemplazar_texto(self):
+        cursor = self.editor.textCursor()
+        if cursor.hasSelection():
+            cursor.insertText(self.reemplazar_input.text())
+
+# -------------------------------------------------------------------
+# Clase principal del Editor
+# -------------------------------------------------------------------
 class EditorTexto(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Editor de Texto Open Source")
+        self.setWindowTitle("Editor de Texto Open source")
         self.setGeometry(100, 100, 800, 600)
+        
+        self.editor = QTextEdit()
+        self.setCentralWidget(self.editor)
+        self.editor.setPlaceholderText("Escribe aquí tu texto...")
+        self.archivo_actual = None
 
-        self.setWindowIcon(QIcon('kali.png'))
-        
-        # COMPLETAR: Crear QTextEdit y establecerlo como widget central
-        # self.editor = QTextEdit()
-        # self.setCentralWidget(self.editor)
-        # self.editor.setPlaceholderText("Escribe aquí tu texto...")
-        self.hoja = QTextEdit()
-        self.setCentralWidget(self.hoja)
-        self.hoja.setPlaceholderText("Escribe aquí tu texto...")
-        
+        # Complementos
         self.crear_menus()
         self.crear_barra_estado()
-# -----------------------------------------------------------------------------
-# Ejercicio 2: Crear la barra de menús
-# -----------------------------------------------------------------------------
-# Teoría:
-# - menuBar() devuelve la barra de menús de QMainWindow.
-# - addMenu() crea un menú nuevo.
-# - QAction representa una acción que puede estar en menús o barras de herramientas.
-#
-# Consigna:
-# - Crear menú "Archivo" con opciones: "Nuevo", "Abrir", "Guardar", "Salir".
-# - Crear menú "Editar" con opciones: "Cortar", "Copiar", "Pegar".
-# - Crear menú "Ayuda" con opción: "Acerca de".
-      
 
+# -------------------------------------------------------------------
+# Menús
+# -------------------------------------------------------------------
     def crear_menus(self):
-        # COMPLETAR: Obtener la barra de menús
-        # menubar = self.menuBar()
-        bar = self.menuBar()
-
-
-        # COMPLETAR: Crear menú Archivo
-        # menu_archivo = menubar.addMenu('&Archivo')
-        archive = bar.addMenu('&Archivo')
-        # COMPLETAR: Crear acciones para el menú Archivo
-        # accion_nuevo = QAction('&Nuevo', self)
-        new = QAction('&Nuevo', self)
-        # accion_nuevo.setShortcut(QKeySequence.New)  
-        new.setShortcut("Ctrl+N")
-        # accion_nuevo.triggered.connect(self.nuevo_archivo)
-        new.triggered.connect(self.nuevo_archivo)
-        archive.addAction(new)
-
-
-        # Repite para: Abrir (Ctrl+O), Guardar (Ctrl+S), Salir (Ctrl+Q)
-        open = QAction('&Abrir', self)  
-        open.setShortcut("Ctrl+O")
-        open.triggered.connect(self.abrir_archivo)
-        archive.addAction(open)
-
-        save = QAction('&Guardar', self)  
-        save.setShortcut("Ctrl+S")
-        save.triggered.connect(self.guardar_archivo)
-        archive.addAction(save)
+        bar_menu = self.menuBar()
         
-        close = QAction('&Salir', self)  
-        close.setShortcut("Ctrl+Q")
-        close.triggered.connect(self.salir)
-        archive.addAction(close)
-
-        about = bar.addMenu('&Ayuda')
-        help1 = QAction('&Acerca de', self)
-        help1.setShortcut("Ctrl+H")
-        help1.triggered.connect(self.acerca_de)
-        about.addAction(help1)
+        #=== FILE MENU ===#
+        menu_file = bar_menu.addMenu('&Archivo')
         
+        new_file = QAction('&Nuevo', self)
+        new_file.setShortcut(QKeySequence.New)
+        new_file.triggered.connect(self.nuevo_archivo)
+        new_file.setShortcutContext(Qt.ApplicationShortcut)
+        menu_file.addAction(new_file)
+        menu_file.addSeparator()
 
-# -----------------------------------------------------------------------------
-# Ejercicio 3: Implementar funciones de archivo
-# -----------------------------------------------------------------------------
-# Teoría:
-# - QFileDialog proporciona diálogos estándar para abrir/guardar archivos.
-# - QFileDialog.getOpenFileName() abre diálogo para seleccionar archivo.
-# - QFileDialog.getSaveFileName() abre diálogo para guardar archivo.
-#
-# Consigna:
-# - Implementar nuevo_archivo(): limpiar el editor.
-# - Implementar abrir_archivo(): usar QFileDialog para cargar archivo.
-# - Implementar guardar_archivo(): usar QFileDialog para guardar texto.
+        open_file = QAction('&Abrir', self)
+        open_file.setShortcut(QKeySequence.Open)
+        open_file.triggered.connect(self.abrir_archivo)
+        open_file.setShortcutContext(Qt.ApplicationShortcut)
+        menu_file.addAction(open_file)
+        menu_file.addSeparator()
 
+        save_file = QAction('&Guardar', self)
+        save_file.setShortcut(QKeySequence.Save)
+        save_file.triggered.connect(self.guardar_archivo)
+        save_file.setShortcutContext(Qt.ApplicationShortcut)
+        menu_file.addAction(save_file)
+        menu_file.addSeparator()
+
+        saveas_file = QAction('&Guardar Como', self)
+        saveas_file.setShortcut(QKeySequence.SaveAs)
+        saveas_file.triggered.connect(self.guardar_como)
+        saveas_file.setShortcutContext(Qt.ApplicationShortcut)
+        menu_file.addAction(saveas_file)
+        menu_file.addSeparator()
+
+        close_file = QAction('&Salir', self)
+        close_file.setShortcut(QKeySequence.Quit)
+        close_file.triggered.connect(self.salir)
+        close_file.setShortcutContext(Qt.ApplicationShortcut)
+        menu_file.addAction(close_file)
+        menu_file.addSeparator()
+        
+        # === EDIT MENU ===#
+        menu_edit = bar_menu.addMenu('&Editar')
+
+        cut_text = QAction('&Cortar', self)
+        cut_text.setShortcut(QKeySequence.Cut)
+        cut_text.triggered.connect(self.editor.cut)
+        cut_text.setShortcutContext(Qt.ApplicationShortcut)
+        menu_edit.addAction(cut_text)
+        menu_edit.addSeparator()
+
+        copy_text = QAction('&Copiar', self)
+        copy_text.setShortcut(QKeySequence.Copy)
+        copy_text.triggered.connect(self.editor.copy)
+        copy_text.setShortcutContext(Qt.ApplicationShortcut)
+        menu_edit.addAction(copy_text)
+        menu_edit.addSeparator()
+
+        paste_text = QAction('&Pegar', self)
+        paste_text.setShortcut(QKeySequence.Paste)
+        paste_text.triggered.connect(self.editor.paste)
+        paste_text.setShortcutContext(Qt.ApplicationShortcut)
+        menu_edit.addAction(paste_text)
+        menu_edit.addSeparator()
+        
+        # === HELP MENU ===#
+        help_menu = bar_menu.addMenu('A&yuda')
+        
+        about_this = QAction('&Acerca de...', self)
+        about_this.setShortcut(QKeySequence.HelpContents)
+        about_this.triggered.connect(self.acerca_de)
+        help_menu.addAction(about_this)
+
+        # === FORMAT MENU ===#
+        menu_format = bar_menu.addMenu('&Formato')
+
+        bold_action = QAction('&Negrita', self)
+        bold_action.setShortcut("Ctrl+B")
+        bold_action.triggered.connect(self.texto_negrita)
+        menu_format.addAction(bold_action)
+
+        italic_action = QAction('&Cursiva', self)
+        italic_action.setShortcut("Ctrl+I")
+        italic_action.triggered.connect(self.texto_cursiva)
+        menu_format.addAction(italic_action)
+
+        underline_action = QAction('&Subrayado', self)
+        underline_action.setShortcut("Ctrl+U")
+        underline_action.triggered.connect(self.texto_subrayado)
+        menu_format.addAction(underline_action)
+
+        font_action = QAction('&Fuente...', self)
+        font_action.triggered.connect(self.configurar_fuente)
+        menu_format.addAction(font_action)
+
+        # === TOOLS MENU ===#
+        menu_tools = bar_menu.addMenu('&Herramientas')
+
+        search_replace_action = QAction('&Buscar/Reemplazar', self)
+        search_replace_action.setShortcut("Ctrl+F")
+        search_replace_action.triggered.connect(self.buscar_reemplazar)
+        menu_tools.addAction(search_replace_action)
+
+        preview_action = QAction('&Vista previa de impresión', self)
+        preview_action.triggered.connect(self.vista_previa)
+        menu_tools.addAction(preview_action)
+
+# -------------------------------------------------------------------
+# Funciones de archivo
+# -------------------------------------------------------------------
     def nuevo_archivo(self):
-
-
-        if self.hoja.document().isModified():
-            msg_box = QMessageBox()
-            msg_box.setWindowTitle('Nuevo Archivo')
-            msg_box.setText('¿Desea guardar los cambios?')
-            si_button = msg_box.addButton("Sí", QMessageBox.YesRole)
-            no_button = msg_box.addButton("No", QMessageBox.NoRole)
-            cancel_button = msg_box.addButton("Cancelar", QMessageBox.RejectRole)
-
-            msg_box.exec_()
-            respond = msg_box.clickedButton()
-
-            if respond == si_button:
+        if self.editor.document().isModified():
+            respuesta = QMessageBox.question(self, 'Nuevo archivo',
+                                           '¿Desea guardar los cambios?',
+                                           QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+            if respuesta == QMessageBox.Yes:
                 self.guardar_archivo()
-                self.hoja.clear()
-                self.statusBar().showMessage('Documento guardado. El nuevo archivo esta disponible.')
-            elif respond == no_button:
-                self.hoja.clear()
-                self.statusBar().showMessage('Cambios descartados. Archivo nuevo.')
-            elif respond == cancel_button:
-                pass
+            elif respuesta == QMessageBox.Cancel:
+                return
+        
+        self.editor.clear()
+        self.archivo_actual = None
+        self.setWindowTitle("Editor - Nuevo documento")
+        self.statusBar().showMessage("Nuevo documento creado", 2000)
     
     def abrir_archivo(self):
-        # COMPLETAR: Abrir diálogo de archivo y cargar contenido
-        # archivo, _ = QFileDialog.getOpenFileName(self, 'Abrir archivo', '', 'Archivos de texto (*.txt)')
-        # if archivo:
-        #     try:
-        #         with open(archivo, 'r', encoding='utf-8') as f:
-        #             contenido = f.read()
-        #             self.editor.setPlainText(contenido)
-        #     except Exception as e:
-        #         QMessageBox.warning(self, 'Error', f'No se pudo abrir el archivo:\n{e}')
-        archivo, _ = QFileDialog.getOpenFileName(self, 'Abrir archivo', '', 'Archivos de texto (*.txt)')
+        archivo, _ = QFileDialog.getOpenFileName(
+            self, 'Abrir archivo', '', 'Archivos de texto (*.txt);;Todos los archivos (*.*)' 
+        )
+        
         if archivo:
             try:
-                with open(archivo, 'r', encoding = 'utf-8') as f:
+                with open(archivo, 'r', encoding='utf-8') as f:
                     contenido = f.read()
-                    self.hoja.setPlainText(contenido)
-                    self.statusBar().showMessage("Archivo abierto exitosamente.")    
+                    self.editor.setPlainText(contenido)
+                
+                self.archivo_actual = archivo
+                self.setWindowTitle(f"Editor - {archivo}")
+                self.statusBar().showMessage(f"Archivo abierto: {archivo}", 3000)
+                
             except Exception as e:
-                self.statusBar().showMessage("Error.")
-                QMessageBox.warning(self,'Error',f'No se pudo abrir el archivo: \n{e}')
-
+                QMessageBox.critical(self, 'Error',
+                                   f'No se pudo abrir el archivo:\n{str(e)}')
+    
     def guardar_archivo(self):
-        archivo, _ = QFileDialog.getSaveFileName(self, 'Guardar archivo', '', 'Archivos de texto (*.txt);;Todos los archivos (*)')
+        if self.archivo_actual:
+            self._escribir_archivo(self.archivo_actual)
+        else:
+            self.guardar_como()
+    
+    def guardar_como(self):
+        archivo, _ = QFileDialog.getSaveFileName(
+            self, 'Guardar archivo como', '', 'Archivos de texto (*.txt);;Todos los archivos (*.*)'
+        )
         if archivo:
-            try:
-                with open(archivo, 'w', encoding='utf-8') as f:
-                    f.write(self.hoja.toPlainText())
-                    self.statusBar().showMessage(f'Archivo guardado en "{archivo}".')
-            except Exception as e:
-                self.statusBar().showMessage("Error.")
-                QMessageBox.warning(self, 'Error', f'No se pudo guardar el archivo:\n{e}')
+            if not archivo.lower().endswith(".txt"):
+                archivo += ".txt"
+            self._escribir_archivo(archivo) 
+    
+    def _escribir_archivo(self, archivo):
+        try:
+            with open(archivo, 'w', encoding='utf-8') as f:
+                f.write(self.editor.toPlainText())
+            
+            self.archivo_actual = archivo
+            self.setWindowTitle(f"Editor - {archivo}")
+            self.statusBar().showMessage(f"Archivo guardado: {archivo}", 3000)
+            self.editor.document().setModified(False)
+            
+        except Exception as e:
+            QMessageBox.critical(self, 'Error al guardar',
+                               f'No se pudo guardar el archivo:\n{str(e)}')
 
-
-# -----------------------------------------------------------------------------
-# Ejercicio 4: Agregar diálogos informativos
-# -----------------------------------------------------------------------------
-# Teoría:
-# - QMessageBox permite mostrar mensajes, advertencias y preguntas al usuario.
-# - QMessageBox.information() muestra información.
-# - QMessageBox.question() hace preguntas con botones Sí/No.
-#
-# Consigna:
-# - Implementar acerca_de(): mostrar información del programa.
-# - Modificar salir(): preguntar si desea guardar antes de cerrar.
-
+# -------------------------------------------------------------------
+# Diálogos
+# -------------------------------------------------------------------
     def acerca_de(self):
-        # COMPLETAR: Mostrar información del programa
-        # QMessageBox.information(self, 'Acerca de', 
-        #                        'Editor de Texto v1.0\n\nCreado con PyQt5\nPara aprender desarrollo de interfaces.')
-         QMessageBox.information(self, 'Acerca de', 
-                                'Nombre: Editor de texto Open Source\nVersion: v1.0\nCreado por: Lanthier Agustin, Marcos Ledesma\nSolo para Linux, porque es cool 🥵')
+        QMessageBox.about(self, 'Acerca de Editor',
+                         '''<h3>Aplicacion Open source</h3>
+                         <p>Creado por Marcos Ledesma y Agustin Lahthier</p>
+                         <p>DE TUP1 de UTNFRVT</p>
+                         <p>Es open source no apto para windwos</p>''')
     
     def salir(self):
-        # COMPLETAR: Preguntar si desea guardar antes de salir
-        # respuesta = QMessageBox.question(self, 'Salir', 
-        #                                 '¿Desea guardar los cambios antes de salir?',
-        #                                 QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
-        # if respuesta == QMessageBox.Yes:
-        #     self.guardar_archivo()
-        # elif respuesta == QMessageBox.No:
-        #     self.close()
-        msg_box = QMessageBox()
-        msg_box.setWindowTitle('Salir')
-        msg_box.setText('¿Desea guardar los cambios?')
-        si_button = msg_box.addButton("Sí", QMessageBox.YesRole)
-        no_button = msg_box.addButton("No", QMessageBox.NoRole)
-        cancel_button = msg_box.addButton("Cancelar", QMessageBox.RejectRole)
-        
-        msg_box.exec_()
-        respond = msg_box.clickedButton()
-
-        if respond == si_button:
+        respuesta = QMessageBox.question(self, 'Salir', 
+                                         '¿Desea guardar los cambios antes de salir?',
+                                         QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+        if respuesta == QMessageBox.Yes:
             self.guardar_archivo()
+        elif respuesta == QMessageBox.No:
             self.close()
-        elif respond == no_button:
-            self.close()
-        elif respond == cancel_button:
-            pass
 
-# -----------------------------------------------------------------------------
-# Ejercicio 5: Agregar barra de estado
-# -----------------------------------------------------------------------------
-# Teoría:
-# - QStatusBar muestra información en la parte inferior de la ventana.
-# - statusBar() devuelve la barra de estado de QMainWindow.
-# - showMessage() muestra un mensaje temporal.
-#
-# Consigna:
-# - Agregar barra de estado que muestre "Listo" al inicio.
-# - Actualizar mensaje cuando se realizan acciones (abrir, guardar, etc.).
-
+# -------------------------------------------------------------------
+# Barra de estado
+# -------------------------------------------------------------------
     def crear_barra_estado(self):
-        # COMPLETAR: Crear y configurar barra de estado
-        # self.statusBar().showMessage('Listo')
         self.statusBar().showMessage('Listo')
-        self.hoja.cursorPositionChanged.connect(self.actualizar_cursor)
-    
+        self.editor.cursorPositionChanged.connect(self.actualizar_cursor)
+
     def actualizar_cursor(self):
-        cursor = self.hoja.textCursor()
-        linea = cursor.blockNumber() + 1
-        columna = cursor.columnNumber() + 1
-        self.statusBar().showMessage(f'Linea: {linea}, Columna: {columna}')           
+        cursor = self.editor.textCursor() 
+        linea = cursor.blockNumber() + 1   
+        columna = cursor.columnNumber() + 1 
+        self.statusBar().showMessage(f'Línea: {linea}, Columna: {columna}')
 
-# -----------------------------------------------------------------------------
-# Ejercicio 6: Integración completa
-# -----------------------------------------------------------------------------
-# Consigna:
-# - Llamar todos los métodos de configuración en __init__.
-# - Probar todas las funcionalidades del editor.
-# - Personalizar colores, fuentes o agregar más opciones de menú.
+# -------------------------------------------------------------------
+# Funciones extra (Formato, Buscar, Imprimir)
+# -------------------------------------------------------------------
+    def texto_negrita(self):
+        fmt = self.editor.currentCharFormat()
+        fmt.setFontWeight(QFont.Bold if fmt.fontWeight() != QFont.Bold else QFont.Normal)
+        self.editor.setCurrentCharFormat(fmt)
 
+    def texto_cursiva(self):
+        fmt = self.editor.currentCharFormat()
+        fmt.setFontItalic(not fmt.fontItalic())
+        self.editor.setCurrentCharFormat(fmt)
+
+    def texto_subrayado(self):
+        fmt = self.editor.currentCharFormat()
+        fmt.setFontUnderline(not fmt.fontUnderline())
+        self.editor.setCurrentCharFormat(fmt)
+
+    def configurar_fuente(self):
+        fuente, ok = QFontDialog.getFont()
+        if ok:
+            self.editor.setFont(fuente)
+
+    def buscar_reemplazar(self):
+        dialogo = BuscarReemplazarDialog(self.editor)
+        dialogo.exec_()
+
+    def vista_previa(self):
+        printer = QPrinter(QPrinter.HighResolution)
+        preview = QPrintPreviewDialog(printer, self)
+        preview.paintRequested.connect(self.editor.print_)
+        preview.exec_()
+
+# -------------------------------------------------------------------
+# Main
+# -------------------------------------------------------------------
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    editor = EditorTexto()
-    # COMPLETAR: Llamar métodos de configuración
-    # editor.crear_menus()
-    # editor.crear_barra_estado()
+    editor = EditorTexto() 
+    app.setStyleSheet(chaca_theme) 
     editor.show()
     sys.exit(app.exec_())
-
-# -----------------------------------------------------------------------------
-# Ejercicio Extra: Mejoras opcionales
-# -----------------------------------------------------------------------------
-# - Agregar función "Buscar y reemplazar".
-# - Implementar vista previa de impresión.
-# - Añadir formato de texto (negrita, cursiva).
-# - Crear diálogo de configuración de fuente.
-# - Implementar funcionalidad de "Archivos recientes".
