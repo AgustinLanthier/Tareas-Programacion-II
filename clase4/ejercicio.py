@@ -83,10 +83,10 @@ class EditorTexto(QMainWindow):
         open.triggered.connect(self.abrir_archivo)
         archive.addAction(open)
 
-        open = QAction('&Guardar', self)  
-        open.setShortcut("Ctrl+S")
-        open.triggered.connect(self.guardar_archivo)
-        archive.addAction(open)
+        save = QAction('&Guardar', self)  
+        save.setShortcut("Ctrl+S")
+        save.triggered.connect(self.guardar_archivo)
+        archive.addAction(save)
         
         close = QAction('&Salir', self)  
         close.setShortcut("Ctrl+Q")
@@ -157,6 +157,7 @@ class EditorTexto(QMainWindow):
             except Exception as e:
                 self.statusBar().showMessage("Error.")
                 QMessageBox.warning(self,'Error',f'No se pudo abrir el archivo: \n{e}')
+
     def guardar_archivo(self):
         archivo, _ = QFileDialog.getSaveFileName(self, 'Guardar archivo', '', 'Archivos de texto (*.txt);;Todos los archivos (*)')
         if archivo:
@@ -165,6 +166,7 @@ class EditorTexto(QMainWindow):
                     f.write(self.hoja.toPlainText())
                     self.statusBar().showMessage(f'Archivo guardado en "{archivo}".')
             except Exception as e:
+                self.statusBar().showMessage("Error.")
                 QMessageBox.warning(self, 'Error', f'No se pudo guardar el archivo:\n{e}')
 
 
@@ -229,7 +231,14 @@ class EditorTexto(QMainWindow):
     def crear_barra_estado(self):
         # COMPLETAR: Crear y configurar barra de estado
         # self.statusBar().showMessage('Listo')
-        pass
+        self.statusBar().showMessage('Listo')
+        self.hoja.cursorPositionChanged.connect(self.actualizar_cursor)
+    
+    def actualizar_cursor(self):
+        cursor = self.hoja.textCursor()
+        linea = cursor.blockNumber() + 1
+        columna = cursor.columnNumber() + 1
+        self.statusBar().showMessage(f'Linea: {linea}, Columna: {columna}')           
 
 # -----------------------------------------------------------------------------
 # Ejercicio 6: Integración completa
