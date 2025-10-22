@@ -80,27 +80,35 @@ class CustomWindow(QMainWindow):
         self.setCentralWidget(container)
     #-----------Create Panels Design------------#
     def create_area_panels(self, main_layout):
-        panel_container = QWidget()
-        h_layout = QHBoxLayout(panel_container)
-        h_layout.setSpacing(0)
-        h_layout.setContentsMargins(0, 0, 0, 0)
+        #---------The splitter is used to resize the panels-----·#
+        splitter = QSplitter(Qt.Horizontal)
         #------Left Panel---------#
         l_panel = self.create_left_panel()
-        h_layout.addWidget(l_panel)
+        splitter.addWidget(l_panel)
         #-------Central Panel------#
         c_panel = self.create_central_panel()
-        h_layout.addWidget(c_panel)
+        splitter.addWidget(c_panel)
         
         #-------Right Panel------#
         r_panel = self.create_right_panel()
-        h_layout.addWidget(r_panel)
-        h_layout.setStretchFactor(l_panel, 1)
-        h_layout.setStretchFactor(c_panel, 3)
-        h_layout.setStretchFactor(r_panel, 1)
+        splitter.addWidget(r_panel)
+        
+        splitter.setSizes([200, 500, 200])
+        splitter.setChildrenCollapsible(False)
+
+        splitter.setStyleSheet("""
+            QSplitter::handle {
+                background-color: #E58D05;
+                width: 3px;
+            }
+            QSplitter::handle:hover {
+                background-color: #FFA500;
+            }
+        """)
 
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
-        main_layout.addWidget(panel_container)
+        main_layout.addWidget(splitter)
     #--------Create Left Panel-------------#
     def create_left_panel(self):
         panel = QWidget()
@@ -115,7 +123,8 @@ class CustomWindow(QMainWindow):
         #-------Chronometer------------#
 
         time_label = QLabel("⏰ Tiempo de Campaña")
-        time_label.setStyleSheet("color: white; font-weight: bold; padding: 10px; border-radius: 10px; ")
+        time_label.setStyleSheet("color: white; font-weight: bold; font-size: 16px; padding: 10px; border-radius: 10px; font-family: Papyrus;")
+        time_label.setAlignment(Qt.AlignCenter)
         up_layout.addWidget(time_label)
         up_layout.addStretch()
         self.display = QLabel ("00:00:00")
@@ -128,7 +137,7 @@ class CustomWindow(QMainWindow):
                 border: 2px solid #E58D05;
                 border-radius: 10px;
                 padding: 5px;
-                text-align: center;
+                
                 margin: 0px;
             }
         """)
@@ -181,11 +190,13 @@ class CustomWindow(QMainWindow):
         down_layout.setSpacing(5)
         down_section.setStyleSheet("background-color: #45484A; border: 2px solid #E58D05;")
         title = QLabel("⚙️ Interfaz")
-        title.setStyleSheet("color: white; font-weight: bold; padding: 10px; border-radius: 10px;")
+        title.setStyleSheet("color: white; font-weight: bold; font-size: 16px; padding: 10px; border-radius: 10px; font-family: Papyrus; ")
+        title.setAlignment(Qt.AlignCenter)
         title.setFixedHeight(40)
         down_layout.addWidget(title)
         down_layout.addStretch()
         #---------Buttons-----------#
+
         cam = QPushButton("⚔️ Campaña")
         pjs = QPushButton("📋 Personajes")
         best = QPushButton("💀 Bestiario")
@@ -194,9 +205,25 @@ class CustomWindow(QMainWindow):
         game = QPushButton("🗺️ Juego")
         biblio = QPushButton("🔍 Biblioteca")
 
-        buttons = [cam, pjs, best, equip, inv, game, biblio]
+        buttons = [cam, pjs, best, equip, game, biblio, inv]
         for button in buttons:
+            button.setStyleSheet("""
+            QPushButton {
+                color: white;
+                font-style: italic;
+                padding: 10px;
+                border-radius: 10px;
+                font-size: 14px;
+                font-family: Palatino Linotype;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #E58D05
+            }
+                                     """)
             down_layout.addWidget(button)
+        #------Line for connect Inventario's button between up_section in right panel-----------#
+        inv.clicked.connect(self.show_inventary)
 
         division_layout.addWidget(up_section)
         division_layout.addWidget(down_section)
@@ -237,20 +264,28 @@ class CustomWindow(QMainWindow):
     #--------Create Right Panel-------------#
     def create_right_panel(self):
         panel = QWidget()
-        panel.setStyleSheet("background-color: #3a3a3a; color: white")
+        panel.setStyleSheet("background-color: #3a3a3a; color: white;")
         division_layout = QVBoxLayout(panel)
         division_layout.setContentsMargins(0, 0, 0, 0)
         division_layout.setSpacing(0)
         #----------Up section----------#
         up_section = QWidget()
-        up_section.setStyleSheet("background-color: #45484A; border: 2px solid #E58D05;")
+        up_section.setStyleSheet("background-color: #45484A;  border: 2px solid #E58D05;")
         up_layout = QVBoxLayout(up_section)   
 
-        title = QLabel("🎒 Inventario")
-        title.setStyleSheet("color: white; font-weight: bold; padding: 10px; border-radius: 10px;")
-        title.setFixedHeight(40)
+        self.right_up_layout = up_layout
 
-        up_layout.addWidget(title)
+        title_waiting = QLabel("Selecciona 'Inventario' de la Interfaz")
+        title_waiting.setStyleSheet("""
+            color: #888;
+            font-size: 14px;
+            padding: 40px;
+            text-align: center;
+            font-style: italic;
+            border: 0px;                       
+        """)
+        title_waiting.setAlignment(Qt.AlignCenter)
+        up_layout.addWidget(title_waiting)
         up_layout.addStretch()
         #----------Down section----------#
         down_section = QWidget()
@@ -258,7 +293,8 @@ class CustomWindow(QMainWindow):
         down_layout = QVBoxLayout(down_section)  
 
         stats_label = QLabel("📊 Estadísticas")
-        stats_label.setStyleSheet("color: white; font-weight: bold; padding: 10px; border-radius: 10px;")
+        stats_label.setStyleSheet("color: white; font-weight: bold; font-size: 16px; padding: 10px; border-radius: 10px; font-family: Papyrus; ")
+        stats_label.setAlignment(Qt.AlignCenter)
 
         down_layout.addWidget(stats_label)
         down_layout.addStretch()
@@ -274,7 +310,79 @@ class CustomWindow(QMainWindow):
     def create_central_panel(self):
         panel = QWidget()
         panel.setStyleSheet(" background-color: #3a3a3a; color: white; border: 2px solid #E58D05;")
+        layout = QVBoxLayout(panel)
+
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        
+        background_label = QLabel()
+        background_label.setAlignment(Qt.AlignCenter)
+        background_label.setStyleSheet("background-color: #1a1a1a;")
+        image_bg = QPixmap("libro.png")
+        if not image_bg.isNull():
+            image_bg = image_bg.scaled(800, 600, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+            background_label.setPixmap(image_bg)
+        
+        layout.addWidget(background_label)
         return panel
+    
+    #-------Show Inventary------#
+    def show_inventary(self):
+        
+        self.clear_layout(self.right_up_layout)
+
+        title = QLabel("🎒 Inventario")
+        title.setStyleSheet("color: white; font-weight: bold; font-size: 16px; padding: 10px;  border: 2px solid #E58D05;border-radius: 10px; font-family: Papyrus; ")
+        title.setAlignment(Qt.AlignCenter)
+        title.setFixedHeight(40)
+        self.right_up_layout.addWidget(title)
+
+        list_inventory = QListWidget()
+        list_inventory.setStyleSheet("""
+            QListWidget {
+                background-color: #2c2c2c;
+                color: white;
+                border: 2px solid #E58D05;
+                border-radius: 10px;
+                padding: 5px;
+                font-size: 14px;
+            }
+            QListWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #5D4037;
+            }
+            QListWidget::item:selected {
+                background-color: #E58D05;
+                color: #2c2c2c;
+            }
+        """)
+        #----Ejemplos-----#
+        items = [
+            "⚔️ Espada larga",
+            "🛡️ Escudo de madera", 
+            "🧪 Poción de vida",
+            "💰 150 monedas de oro",
+            "🔑 Llave antigua",
+            "📜 Pergamino misterioso",
+            "💎 Gema brillante",
+            "🏹 Arco compuesto"
+        ]
+        
+        for item in items:
+            list_inventory.addItem(item)
+        
+        self.right_up_layout.addWidget(list_inventory)
+        self.right_up_layout.addStretch()
+
+    #-------This method is used to clean the layout so that data does not accumulate------#
+    def clear_layout(self, layout):
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+            elif item.layout():
+                self.clear_layout(item.layout())
     def changeMaxMin(self):
         if not self.isMaximized:
             self.showMaximized()
