@@ -106,6 +106,7 @@ class CustomWindow(QMainWindow):
             }
         """)
 
+
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
         main_layout.addWidget(splitter)
@@ -224,6 +225,7 @@ class CustomWindow(QMainWindow):
             down_layout.addWidget(button)
         #------Line for connect Inventario's button between up_section in right panel-----------#
         inv.clicked.connect(self.show_inventary)
+        best.clicked.connect(self.show_bestiary)
 
         division_layout.addWidget(up_section)
         division_layout.addWidget(down_section)
@@ -308,24 +310,21 @@ class CustomWindow(QMainWindow):
         return panel
     #--------Create Central Panel-------------# 
     def create_central_panel(self):
-        panel = QWidget()
-        panel.setStyleSheet(" background-color: #3a3a3a; color: white; border: 2px solid #E58D05;")
-        layout = QVBoxLayout(panel)
+        self.panel = QWidget()
+        self.panel.setStyleSheet(" background-color: #3a3a3a; color: white; border: 2px solid #E58D05;")
+        layout = QVBoxLayout(self.panel)
 
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         
-        background_label = QLabel()
-        background_label.setAlignment(Qt.AlignCenter)
-        background_label.setStyleSheet("background-color: #1a1a1a;")
-        image_bg = QPixmap("libro.png")
-        if not image_bg.isNull():
-            image_bg = image_bg.scaled(800, 600, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
-            background_label.setPixmap(image_bg)
+        self.background_label = QLabel()
+        self.background_label.setAlignment(Qt.AlignCenter)
+        self.background_label.setStyleSheet("background-color: #1a1a1a;")
+        self.background_label.setText("Selecciona una opción de la Interfaz")
+        self.background_label.setStyleSheet("background-color: #1a1a1a; color: #888; font-size: 18px; font-style: italic;")
+        layout.addWidget(self.background_label)
+        return self.panel
         
-        layout.addWidget(background_label)
-        return panel
-    
     #-------Show Inventary------#
     def show_inventary(self):
         
@@ -374,6 +373,25 @@ class CustomWindow(QMainWindow):
         self.right_up_layout.addWidget(list_inventory)
         self.right_up_layout.addStretch()
 
+    #---------Show Bestary------#
+    def show_bestiary(self):
+        bestiary_image = QPixmap("libro1.png") 
+        
+        if not bestiary_image.isNull():
+            self.background_label.setScaledContents(False)
+            self.background_label.setPixmap(bestiary_image)
+            self.background_label.setStyleSheet("background-color: #1a1a1a;")
+
+            self.background_label.setStyleSheet("background-color: #1a1a1a;")
+        else:
+            self.background_label.setText("❌ No se pudo cargar la imagen del Bestiario")
+            self.background_label.setStyleSheet("""
+                background-color: #1a1a1a;
+                color: #FF6B6B;
+                font-size: 16px;
+                font-weight: bold;
+            """)
+        
     #-------This method is used to clean the layout so that data does not accumulate------#
     def clear_layout(self, layout):
         while layout.count():
@@ -383,6 +401,7 @@ class CustomWindow(QMainWindow):
                 widget.deleteLater()
             elif item.layout():
                 self.clear_layout(item.layout())
+
     def changeMaxMin(self):
         if not self.isMaximized:
             self.showMaximized()
@@ -402,8 +421,13 @@ class CustomWindow(QMainWindow):
         if event.buttons() == Qt.LeftButton and hasattr(self, 'inicial_position'):
             self.move(event.globalPos() - self.inicial_position)
             event.accept()
-    
-    
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.new_bar.setFixedWidth(self.width())
+        if hasattr(self, 'background_label') and self.background_label.isVisible():
+            self.background_label.setFixedSize(self.panel.size())
+
 app = QApplication(sys.argv)
 ventana = CustomWindow()
 ventana.show()
