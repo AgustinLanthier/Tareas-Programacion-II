@@ -310,20 +310,23 @@ class CustomWindow(QMainWindow):
         return panel
     #--------Create Central Panel-------------# 
     def create_central_panel(self):
-        self.panel = QWidget()
-        self.panel.setStyleSheet(" background-color: #3a3a3a; color: white; border: 2px solid #E58D05;")
-        layout = QVBoxLayout(self.panel)
+        self.panel_central = QWidget()
+        self.panel_central.setStyleSheet("background-color: #3a3a3a; color: white; border: 2px solid #E58D05;")
+        self.layout_central = QVBoxLayout(self.panel_central)
 
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        self.layout_central.setContentsMargins(0, 0, 0, 0)
+        self.layout_central.setSpacing(0)
         
         self.background_label = QLabel()
         self.background_label.setAlignment(Qt.AlignCenter)
         self.background_label.setStyleSheet("background-color: #1a1a1a;")
         self.background_label.setText("Selecciona una opción de la Interfaz")
         self.background_label.setStyleSheet("background-color: #1a1a1a; color: #888; font-size: 18px; font-style: italic;")
-        layout.addWidget(self.background_label)
-        return self.panel
+        
+        container_data = self.show_monsters()
+        self.layout_central.addWidget(container_data)
+        self.layout_central.addWidget(self.background_label)
+        return self.panel_central
         
     #-------Show Inventary------#
     def show_inventary(self):
@@ -375,22 +378,27 @@ class CustomWindow(QMainWindow):
 
     #---------Show Bestary------#
     def show_bestiary(self):
-        bestiary_image = QPixmap("libro1.png") 
+        self.clear_layout(self.layout_central)
+        title_bestiary = QLabel("💀 Bestiario")
+        title_bestiary.setStyleSheet("color: white; font-weight: bold; font-size: 16px; padding: 10px;  border: 2px solid #E58D05;border-radius: 10px; font-family: Papyrus; ")
+        title_bestiary.setAlignment(Qt.AlignCenter)
+    
+        bestiary = QWidget()
+        bestiary.setStyleSheet("border-image: url(libro.png) 0 0 0 0 stretch stretch; background-repeat: no-repeat; background-position: center; ")
         
-        if not bestiary_image.isNull():
-            self.background_label.setScaledContents(False)
-            self.background_label.setPixmap(bestiary_image)
-            self.background_label.setStyleSheet("background-color: #1a1a1a;")
+        self.layout_central.addWidget(title_bestiary)
+        self.layout_central.addWidget(bestiary)
 
-            self.background_label.setStyleSheet("background-color: #1a1a1a;")
-        else:
-            self.background_label.setText("❌ No se pudo cargar la imagen del Bestiario")
-            self.background_label.setStyleSheet("""
-                background-color: #1a1a1a;
-                color: #FF6B6B;
-                font-size: 16px;
-                font-weight: bold;
-            """)
+        self.layout_central.setStretchFactor(title_bestiary,1)
+        self.layout_central.setStretchFactor(bestiary, 9)
+
+        return self.layout_central
+    #--------Function for show monsters-------#
+    def show_monsters(self):
+        grid_monster = QGridLayout()
+        image_monster = QWidget()
+        image_monster.setStyleSheet("border-image: url() 0 0 0 0 stretch stretch; border: 2px solid black")
+        grid_monster.addWidget(image_monster)
         
     #-------This method is used to clean the layout so that data does not accumulate------#
     def clear_layout(self, layout):
@@ -422,12 +430,12 @@ class CustomWindow(QMainWindow):
             self.move(event.globalPos() - self.inicial_position)
             event.accept()
 
-    def resizeEvent(self, event):
+    '''def resizeEvent(self, event):
         super().resizeEvent(event)
         self.new_bar.setFixedWidth(self.width())
         if hasattr(self, 'background_label') and self.background_label.isVisible():
-            self.background_label.setFixedSize(self.panel.size())
-
+            self.background_label.setFixedSize(self.panel_central.size())
+    '''
 app = QApplication(sys.argv)
 ventana = CustomWindow()
 ventana.show()
