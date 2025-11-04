@@ -10,7 +10,7 @@ class CustomWindow(QMainWindow):
         self.setGeometry(100, 100, 900, 600)
         self.setStyleSheet("background-color: #28292ad3")
         self.isMaximized = False
-#-----------------------Top Bar-----------------------#
+#-----------------------up Bar-----------------------#
 
         self.new_bar = QWidget(self)
         self.new_bar.setStyleSheet("background-color: #000; color: white")
@@ -203,10 +203,9 @@ class CustomWindow(QMainWindow):
         best = QPushButton("💀 Bestiario")
         equip = QPushButton("🛡️ Equipamiento")
         inv = QPushButton("🎒 Inventario")
-        game = QPushButton("🗺️ Juego")
         biblio = QPushButton("🔍 Biblioteca")
 
-        buttons = [cam, pjs, best, equip, game, biblio, inv]
+        buttons = [cam, pjs, best, equip, biblio, inv]
         for button in buttons:
             button.setStyleSheet("""
             QPushButton {
@@ -244,11 +243,11 @@ class CustomWindow(QMainWindow):
     def pause_chronometer(self):
         if self.chronometer_active:
             self.chronometer_active = False
-            self.timer.stop()
+            self.timer.sup()
 
     def restart_chronometer(self):
         self.chronometer_active = False
-        self.timer.stop()
+        self.timer.sup()
         self.time_transcurred = 0
         self.actualize_chronometer()
 
@@ -317,14 +316,12 @@ class CustomWindow(QMainWindow):
         self.layout_central.setContentsMargins(0, 0, 0, 0)
         self.layout_central.setSpacing(0)
         
+        
         self.background_label = QLabel()
         self.background_label.setAlignment(Qt.AlignCenter)
-        self.background_label.setStyleSheet("background-color: #1a1a1a;")
+        self.background_label.setStyleSheet("background-color: #3a3a3a;")
         self.background_label.setText("Selecciona una opción de la Interfaz")
-        self.background_label.setStyleSheet("background-color: #1a1a1a; color: #888; font-size: 18px; font-style: italic;")
         
-        container_data = self.show_monsters()
-        self.layout_central.addWidget(container_data)
         self.layout_central.addWidget(self.background_label)
         return self.panel_central
         
@@ -379,26 +376,194 @@ class CustomWindow(QMainWindow):
     #---------Show Bestary------#
     def show_bestiary(self):
         self.clear_layout(self.layout_central)
-        title_bestiary = QLabel("💀 Bestiario")
-        title_bestiary.setStyleSheet("color: white; font-weight: bold; font-size: 16px; padding: 10px;  border: 2px solid #E58D05;border-radius: 10px; font-family: Papyrus; ")
-        title_bestiary.setAlignment(Qt.AlignCenter)
-    
-        bestiary = QWidget()
-        bestiary.setStyleSheet("border-image: url(libro.png) 0 0 0 0 stretch stretch; background-repeat: no-repeat; background-position: center; ")
         
-        self.layout_central.addWidget(title_bestiary)
+        # Widget del libro como contenedor principal
+        bestiary = QWidget()
+        bestiary.setFixedSize(700, 900)
+        bestiary.setStyleSheet("""
+            QWidget {
+                background: #5D4037;
+                border: 5px solid #E58D05;
+                border-radius: 15px;
+            }
+        """)
+        
+        
+        book_layout = QVBoxLayout(bestiary)
+        book_layout.setContentsMargins(40, 40, 40, 40)
+        
+        monster_content = self.show_monsters()
+        book_layout.addWidget(monster_content)
+        
         self.layout_central.addWidget(bestiary)
-
-        self.layout_central.setStretchFactor(title_bestiary,1)
-        self.layout_central.setStretchFactor(bestiary, 9)
+        self.layout_central.setAlignment(Qt.AlignCenter)
 
         return self.layout_central
     #--------Function for show monsters-------#
     def show_monsters(self):
-        grid_monster = QGridLayout()
-        image_monster = QWidget()
-        image_monster.setStyleSheet("border-image: url() 0 0 0 0 stretch stretch; border: 2px solid black")
-        grid_monster.addWidget(image_monster)
+        monster_container = QWidget()
+        monster_container.setStyleSheet("background: #3a3a3a; border: 2px solid #E58D05; border-radius: 5px;")
+        
+        layout_bestiary = QVBoxLayout(monster_container)
+        layout_bestiary.setContentsMargins(25, 25, 25, 25)
+        layout_bestiary.setSpacing(20)
+        
+        # ------ ENCABEZADO DEL LIBRO ------
+        header_layout = QHBoxLayout()
+        
+        left_header = QLabel("Manual de monstruos")
+        left_header.setStyleSheet("")
+        
+        header_layout.addWidget(left_header)
+        header_layout.addStretch()
+        
+        # ------ Up section ------
+        up_section = QWidget()
+        up_layout = QHBoxLayout(up_section)
+        up_layout.setSpacing(25)
+        
+        # ------ Column Image------
+        left_column = QWidget()
+        left_layout = QVBoxLayout(left_column)
+        left_layout.setSpacing(15)
+        
+        image_frame = QWidget()
+        image_frame.setFixedSize(180, 180)
+        image_frame.setStyleSheet("")
+        
+        image_layout = QVBoxLayout(image_frame)
+        image_label = QLabel()
+        image_label.setFixedSize(160, 160)
+        image_label.setStyleSheet("")
+        image_label.setAlignment(Qt.AlignCenter)
+        image_label.setText("🦖")
+        
+        image_layout.addWidget(image_label)
+        
+        # Nombre del monstruo
+        name_label = QLabel("DRAGÓN ROJO")
+        name_label.setStyleSheet("")
+        name_label.setAlignment(Qt.AlignCenter)
+        
+        left_layout.addWidget(image_frame)
+        left_layout.addWidget(name_label)
+        left_layout.addStretch()
+        
+        # ------ COLUMNA DERECHA: Descripción ------
+        right_column = QWidget()
+        right_layout = QVBoxLayout(right_column)
+        
+        desc_title = QLabel("Descripción")
+        desc_title.setStyleSheet("")
+        
+        desc_text = QLabel(
+            "Los dragones rojos, señores de las montañas ardientes, "
+            "son criaturas de orgullo infinito y avaricia insaciable. "
+            "Su aliento escupe llamas que funden la roca y su mirada "
+            "pone en fuga a los más valientes guerreros.\n\n"
+            "Estas bestias ancestrales acumulan tesoros en cavernas "
+            "volcánicas, vigilando cada moneda con celo obsesivo. "
+            "Su sabiduría se mide en siglos y su furia en llamaradas."
+        )
+        desc_text.setStyleSheet("")
+        desc_text.setWordWrap(True)
+        desc_text.setAlignment(Qt.Alignup)
+        
+        right_layout.addWidget(desc_title)
+        right_layout.addWidget(desc_text)
+        right_layout.addStretch()
+        
+        up_layout.addWidget(left_column)
+        up_layout.addWidget(right_column)
+        
+        # ------ LÍNEA DIVISORIA ------
+        divider = QFrame()
+        divider.setFrameShape(QFrame.HLine)
+        divider.setStyleSheet("")
+        
+        # ------ SECCIÓN INFERIOR: Stats y Debilidades ------
+        bottom_section = QWidget()
+        bottom_layout = QHBoxLayout(bottom_section)
+        bottom_layout.setSpacing(30)
+        
+        # ------ ESTADÍSTICAS ------
+        stats_column = QWidget()
+        stats_layout = QVBoxLayout(stats_column)
+        
+        stats_title = QLabel("Estadísticas del Combate")
+        stats_title.setStyleSheet("")
+        
+        # Contenedor de stats
+        stats_container = QWidget()
+        stats_container.setStyleSheet("")
+        stats_grid = QGridLayout(stats_container)
+        
+        stats_data = [
+            ("Vitalidad:", "250 HP"),
+            ("Armadura:", "18 CA"),
+            ("Daño Base:", "4d10 + 6"),
+            ("Velocidad:", "12 metros"),
+            ("Aliento:", "15d6 Fuego"),
+            ("Resistencias:", "Fuego, Cortante")
+        ]
+        
+        for i, (stat, value) in enumerate(stats_data):
+            stat_label = QLabel(stat)
+            stat_label.setStyleSheet("")
+            value_label = QLabel(value)
+            value_label.setStyleSheet("")
+            
+            stats_grid.addWidget(stat_label, i, 0)
+            stats_grid.addWidget(value_label, i, 1)
+        
+        stats_layout.addWidget(stats_title)
+        stats_layout.addWidget(stats_container)
+        stats_layout.addStretch()
+        
+        # ------ DEBILIDADES ------
+        weaknesses_column = QWidget()
+        weaknesses_layout = QVBoxLayout(weaknesses_column)
+        
+        weaknesses_title = QLabel("Vulnerabilidades Conocidas")
+        weaknesses_title.setStyleSheet("")
+        
+        weaknesses_text = QLabel(
+            "• Vulnerable al frío extremo\n"
+            "• Cegado por luz divina\n"
+            "• Susceptible a magia de hielo\n"
+            "• Lento en espacios estrechos\n"
+            "• Arrogante y predecible"
+        )
+        weaknesses_text.setStyleSheet("")
+        
+        weaknesses_layout.addWidget(weaknesses_title)
+        weaknesses_layout.addWidget(weaknesses_text)
+        weaknesses_layout.addStretch()
+        
+        bottom_layout.addWidget(stats_column)
+        bottom_layout.addWidget(weaknesses_column)
+        
+        # ------ PIE DE PÁGINA ------
+        footer_layout = QHBoxLayout()
+        
+        left_footer = QLabel("Bestiario Oficial D&D")
+        left_footer.setStyleSheet("")
+        
+        right_footer = QLabel("Clasificación: ⭐⭐⭐⭐⭐ Peligro")
+        right_footer.setStyleSheet("")
+        
+        footer_layout.addWidget(left_footer)
+        footer_layout.addStretch()
+        footer_layout.addWidget(right_footer)
+        
+        layout_bestiary.addLayout(header_layout)
+        layout_bestiary.addWidget(up_section)
+        layout_bestiary.addWidget(divider)
+        layout_bestiary.addWidget(bottom_section)
+        layout_bestiary.addStretch()
+        layout_bestiary.addLayout(footer_layout)
+        
+        return monster_container
         
     #-------This method is used to clean the layout so that data does not accumulate------#
     def clear_layout(self, layout):
@@ -422,7 +587,7 @@ class CustomWindow(QMainWindow):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self.inicial_position = event.globalPos() - self.frameGeometry().topLeft()
+            self.inicial_position = event.globalPos() - self.frameGeometry().upLeft()
             event.accept()
 
     def mouseMoveEvent(self, event):
